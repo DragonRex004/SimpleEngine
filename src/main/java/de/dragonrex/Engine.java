@@ -1,74 +1,56 @@
 package de.dragonrex;
 
-import de.dragonrex.impl.Cube;
-import de.dragonrex.impl.Triangle;
-
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public class Simple2DEngine extends Canvas implements KeyListener, Runnable, MouseMotionListener, ComponentListener {
-    private static Simple2DEngine engine;
+public abstract class Engine extends Canvas implements KeyListener, Runnable, MouseMotionListener, ComponentListener {
+    private static Engine engine;
+    private final Camera camera;
+    private Thread engineThread;
     private List<GameObject> objects;
-
-    private double cameraX = 0;
-    private double cameraY = 0;
-    private double dxCam = 0;
-    private double dyCam = 0;
-    private int worldWidth = 10000;
-    private int worldHeight = 10000;
-    private int windowWidth = 800;
-    private int windowHeight = 600;
-
-    private double speed = 5;
+    private int worldWidth;
+    private int worldHeight;
+    private int windowWidth;
+    private int windowHeight;
 
     private Image offscreenImage;
     private Graphics offscreenGraphics;
 
-    public Simple2DEngine() {
+    public Engine(int windowWidth, int windowHeight, int worldWidth, int worldHeight) {
         engine = this;
+        this.worldWidth = worldWidth;
+        this.worldHeight = worldHeight;
+        this.windowWidth = windowWidth;
+        this.windowHeight = windowHeight;
         this.objects = new ArrayList<>();
         this.addKeyListener(this);
         this.addComponentListener(this);
-        this.setFocusable(true);
-        this.setSize(windowWidth, windowHeight);
-        this.objects.add(new Triangle("Test-2"));
-        this.objects.add(new Cube("TEST-1", 100, 100, 5));
-    }
-
-    // Hauptmethode, um das Fenster zu starten
-    public static void main(String[] args) {
-        Frame frame = new Frame("2D Engine");
-        Simple2DEngine engine = new Simple2DEngine();
-        frame.add(engine);
-        frame.pack();
-        frame.setVisible(true);
-        frame.addWindowListener(new WindowAdapter() {
-            @Override
-            public void windowClosing(WindowEvent e) {
-                System.exit(0);
-            }
-
-            @Override
-            public void windowStateChanged(WindowEvent e) {
-                System.out.println(e.getWindow().getWidth());
-                System.out.println(e.getWindow().getHeight());
-            }
-        });
-        engine.start();
+        this.setPreferredSize(new Dimension(this.windowWidth, this.windowHeight));
+        this.camera = new Camera(0, 0, 5);
+        this.setup();
     }
 
 
     public void start() {
-        new Thread(this).start();
+        this.engineThread = new Thread(this);
+        this.engineThread.setName("ENGINE-1.0.0");
+        this.engineThread.start();
     }
+
+    protected abstract void setup();
+    protected abstract void loop();
+    protected abstract void onKeyboard(KeyEvent event, boolean keyPressed);
+    protected abstract void onMouse(MouseEvent event, boolean mouseMoved);
+
 
     @Override
     public void run() {
-        while (true) {
+        while (this.engineThread.isAlive()) {
             this.objects.forEach(GameObject::update);
-            updateCamera();
+            this.loop();
+            this.camera.update();
             repaint();
             try {
                 Thread.sleep(16);
@@ -89,10 +71,6 @@ public class Simple2DEngine extends Canvas implements KeyListener, Runnable, Mou
         paint(offscreenGraphics);
         g.drawImage(offscreenImage, 0, 0, this);
     }
-    public void updateCamera() {
-        cameraX += dxCam;
-        cameraY += dyCam;
-    }
 
     @Override
     public void paint(Graphics g) {
@@ -102,27 +80,12 @@ public class Simple2DEngine extends Canvas implements KeyListener, Runnable, Mou
         this.objects.forEach(object -> object.render(g));
     }
 
-    // Tasteneingaben für die Bewegung
     @Override
     public void keyPressed(KeyEvent e) {
         for (GameObject gameObject : this.objects) {
             gameObject.keyPressed(e);
         }
-        int key = e.getKeyCode();
-        if (key == KeyEvent.VK_D) {
-            dxCam  = -speed; // Kamera nach links bewegen
-        } else if (key == KeyEvent.VK_A) {
-            dxCam = speed; // Kamera nach rechts bewegen
-        } else if (key == KeyEvent.VK_S) {
-            dyCam = -speed; // Kamera nach oben bewegen
-        } else if (key == KeyEvent.VK_W) {
-            dyCam = speed; // Kamera nach unten bewegen
-        }
-        int halfWindowWidth = windowWidth / 2;
-        int halfWindowHeight = windowHeight / 2;
-
-        cameraX = Math.max(-halfWindowWidth, Math.min(cameraX, worldWidth - halfWindowWidth));
-        cameraY = Math.max(-halfWindowHeight, Math.min(cameraY, worldHeight - halfWindowHeight));
+        this.onKeyboard(e, true);
     }
 
     @Override
@@ -130,37 +93,15 @@ public class Simple2DEngine extends Canvas implements KeyListener, Runnable, Mou
         for (GameObject gameObject : this.objects) {
             gameObject.keyReleased(e);
         }
-
-        int key = e.getKeyCode();
-        if (key == KeyEvent.VK_W || key == KeyEvent.VK_S) {
-            dyCam = 0;
-        }
-        if (key == KeyEvent.VK_D || key == KeyEvent.VK_A) {
-            dxCam = 0;
-        }
+        this.onKeyboard(e, false);
     }
 
-    // Abfangen der Größenänderung des Fensters
     @Override
     public void componentResized(ComponentEvent e) {
-        // Aktualisiere die Fenstergröße
-        windowWidth = getWidth();
-        windowHeight = getHeight();
-
-        // Optional: Kamera oder andere Parameter nach der Größenänderung anpassen
-        System.out.println("Neues Fenstergröße: " + windowWidth + "x" + windowHeight);
-
-        // Stelle sicher, dass die Kamera innerhalb der Weltgrenzen bleibt
-        int halfWindowWidth = windowWidth / 2;
-        int halfWindowHeight = windowHeight / 2;
-
-        cameraX = Math.max(-halfWindowWidth, Math.min(cameraX, worldWidth - halfWindowWidth));
-        cameraY = Math.max(-halfWindowHeight, Math.min(cameraY, worldHeight - halfWindowHeight));
-
+        if(this.camera != null) this.camera.calculateView();
         offscreenImage = null;
     }
 
-    // Leere Implementierungen der anderen Methoden des ComponentListener
     @Override
     public void componentMoved(ComponentEvent e) {}
     @Override
@@ -173,34 +114,44 @@ public class Simple2DEngine extends Canvas implements KeyListener, Runnable, Mou
         for (GameObject gameObject : this.objects) {
             gameObject.keyTyped(e);
         }
+        this.onKeyboard(e, false);
     }
 
-    // Mausbewegung, um die Kamera zu steuern
     @Override
     public void mouseMoved(MouseEvent e) {
+        this.onMouse(e, true);
     }
 
-    // Die Methode `mouseDragged` wird in diesem Fall nicht benötigt, aber sie könnte genutzt werden
     @Override
-    public void mouseDragged(MouseEvent e) {}
+    public void mouseDragged(MouseEvent e) {
+        this.onMouse(e, false);
+    }
 
-    public static Simple2DEngine getEngine() {
+    public static Engine getEngine() {
         return engine;
     }
-    /*
-    public double getXPos() {
-        return x;
+
+    public int getWindowHeight() {
+        return windowHeight;
     }
 
-    public double getYPos() {
-        return y;
-    }
-    */
-    public double getCameraX() {
-        return cameraX;
+    public int getWindowWidth() {
+        return windowWidth;
     }
 
-    public double getCameraY() {
-        return cameraY;
+    public int getWorldWidth() {
+        return worldWidth;
+    }
+
+    public int getWorldHeight() {
+        return worldHeight;
+    }
+
+    public Camera getCamera() {
+        return camera;
+    }
+
+    public List<GameObject> getObjects() {
+        return objects;
     }
 }

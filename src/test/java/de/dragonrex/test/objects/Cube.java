@@ -1,4 +1,4 @@
-package de.dragonrex.test;
+package de.dragonrex.test.objects;
 
 import de.dragonrex.Engine;
 import de.dragonrex.GameObject;
