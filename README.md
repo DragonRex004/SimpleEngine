@@ -1,4 +1,4 @@
-# <img src="assets/SimpleEngineLogo.jpg" alt="SimpleEngine Logo" style="vertical-align: middle; margin-right: 20px; margin-top: -15px;" width="64" height="64" align="right"/>  SimpleEngine
+# <img src="assets/SimpleEngineLogo.jpg" alt="SimpleEngine Logo" style="vertical-align: middle; margin-right: 20px; margin-top: -20px;" width="64" height="64" align="right"/>  SimpleEngine
 
 ### SimpleEngine is a Java AWT based Graphics Engine. It supports the following features.
 
