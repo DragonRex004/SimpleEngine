@@ -12,8 +12,6 @@
 # Warning
 This engine is in early development, and it's not recommended to use it in this state.
 
-__________
-
 # Contributor
 
 - ### DragonRex
