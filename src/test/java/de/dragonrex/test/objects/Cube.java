@@ -31,6 +31,11 @@ public class Cube extends GameObject {
     }
 
     @Override
+    public Position getPosition() {
+        return position;
+    }
+
+    @Override
     public void update() {
         this.position.add(this.dPosition);
     }

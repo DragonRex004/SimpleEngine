@@ -1,5 +1,7 @@
 package de.dragonrex;
 
+import de.dragonrex.math.Position;
+
 import java.awt.*;
 import java.awt.event.KeyEvent;
 
@@ -11,4 +13,5 @@ public abstract class GameObject {
     public abstract void keyPressed(KeyEvent e);
     public abstract void keyReleased(KeyEvent e);
     public abstract void keyTyped(KeyEvent e);
+    public abstract Position getPosition();
 }

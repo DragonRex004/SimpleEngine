@@ -1,11 +1,15 @@
 package de.dragonrex;
 
+import de.dragonrex.components.KeyControl;
+import de.dragonrex.components.MouseControl;
+import de.dragonrex.components.MouseMotionControl;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.util.ArrayList;
 import java.util.List;
 
-public abstract class Engine extends Canvas implements KeyListener, Runnable, MouseMotionListener, ComponentListener {
+public abstract class Engine extends Canvas implements KeyListener, Runnable, MouseMotionListener, MouseListener, ComponentListener {
     private static Engine engine;
     private final Camera camera;
     private Thread engineThread;
@@ -41,8 +45,6 @@ public abstract class Engine extends Canvas implements KeyListener, Runnable, Mo
 
     protected abstract void setup();
     protected abstract void loop();
-    protected abstract void onKeyboard(KeyEvent event, boolean keyPressed);
-    protected abstract void onMouse(MouseEvent event, boolean mouseMoved);
 
 
     @Override
@@ -82,18 +84,16 @@ public abstract class Engine extends Canvas implements KeyListener, Runnable, Mo
 
     @Override
     public void keyPressed(KeyEvent e) {
-        for (GameObject gameObject : this.objects) {
-            gameObject.keyPressed(e);
-        }
-        this.onKeyboard(e, true);
+        this.getObjects().forEach(gameObject -> {
+            if(gameObject instanceof KeyControl keyControl) keyControl.onKeyPressed(e);
+        });
     }
 
     @Override
     public void keyReleased(KeyEvent e) {
-        for (GameObject gameObject : this.objects) {
-            gameObject.keyReleased(e);
-        }
-        this.onKeyboard(e, false);
+        this.getObjects().forEach(gameObject -> {
+            if(gameObject instanceof KeyControl keyControl) keyControl.onKeyReleased(e);
+        });
     }
 
     @Override
@@ -111,21 +111,50 @@ public abstract class Engine extends Canvas implements KeyListener, Runnable, Mo
 
     @Override
     public void keyTyped(KeyEvent e) {
-        for (GameObject gameObject : this.objects) {
-            gameObject.keyTyped(e);
-        }
-        this.onKeyboard(e, false);
+        this.getObjects().forEach(gameObject -> {
+            if(gameObject instanceof KeyControl keyControl) keyControl.onKeyTyped(e);
+        });
     }
 
     @Override
     public void mouseMoved(MouseEvent e) {
-        this.onMouse(e, true);
+        this.getObjects().forEach(gameObject -> {
+            if(gameObject instanceof MouseMotionControl mouseControl) mouseControl.onMouseMoved(e);
+        });
     }
 
     @Override
     public void mouseDragged(MouseEvent e) {
-        this.onMouse(e, false);
+        this.getObjects().forEach(gameObject -> {
+            if(gameObject instanceof MouseMotionControl mouseControl) mouseControl.onMouseDragged(e);
+        });
     }
+
+    @Override
+    public void mousePressed(MouseEvent e) {
+        this.getObjects().forEach(gameObject -> {
+            if(gameObject instanceof MouseControl mouseControl) mouseControl.onMousePressed(e);
+        });
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        this.getObjects().forEach(gameObject -> {
+            if(gameObject instanceof MouseControl mouseControl) mouseControl.onMouseReleased(e);
+        });
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {
+        this.getObjects().forEach(gameObject -> {
+            if(gameObject instanceof MouseControl mouseControl) mouseControl.onMouseClicked(e);
+        });
+    }
+
+    @Override
+    public void mouseEntered(MouseEvent e) {}
+    @Override
+    public void mouseExited(MouseEvent e) {}
 
     public static Engine getEngine() {
         return engine;

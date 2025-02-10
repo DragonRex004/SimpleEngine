@@ -2,6 +2,7 @@ package de.dragonrex.test.objects;
 
 import de.dragonrex.Engine;
 import de.dragonrex.GameObject;
+import de.dragonrex.math.Position;
 
 import java.awt.*;
 import java.awt.event.KeyEvent;
@@ -21,6 +22,11 @@ public class Triangle extends GameObject {
                 (int) (Engine.getEngine().getCamera().getPosition().getY() + 200),
                 50, 50
         );
+    }
+
+    @Override
+    public Position getPosition() {
+        return new Position(0, 0);
     }
 
     @Override

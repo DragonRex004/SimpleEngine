@@ -2,9 +2,12 @@ package de.dragonrex.test;
 
 import de.dragonrex.Engine;
 import de.dragonrex.frame.EngineFrame;
+import de.dragonrex.math.Position;
 import de.dragonrex.test.objects.Cube;
 import de.dragonrex.test.objects.Triangle;
+import de.dragonrex.ui.Text;
 
+import java.awt.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 
@@ -13,7 +16,7 @@ public class Simple2DEngine extends Engine {
     public Simple2DEngine() {
         super(800, 600, 100000, 100000);
         EngineFrame engineFrame = new EngineFrame(config -> {
-            config.setFullScreen(true);
+            config.setFullScreen(false);
         }).build();
         engineFrame.add(this);
         engineFrame.start();
@@ -27,6 +30,21 @@ public class Simple2DEngine extends Engine {
     protected void setup() {
         this.getObjects().add(new Triangle("Test-2"));
         this.getObjects().add(new Cube("TEST-1", 100, 100, 5));
+        Text text = new Text("TEXT_01");
+        text.setFont(new Font("Arial", Font.BOLD, 16));
+        text.setPosition(new Position(500, 500));
+        text.onUpdate(() -> {
+            this.getObjects().forEach(obj -> {
+                if(obj.id().equals("TEST-1")) {
+                    text.setText("Cube Pos X: " +
+                                    (int) obj.getPosition().getX()
+                                    + " Y: " +
+                                    (int) obj.getPosition().getY()
+                    );
+                }
+            });
+        });
+        this.getObjects().add(text);
     }
 
     @Override

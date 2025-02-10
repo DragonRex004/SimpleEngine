@@ -48,6 +48,7 @@ public class EngineFrame extends Frame {
         this.pack();
         if(config.isCentered())
             this.setLocationRelativeTo(null);
+        this.setIconImage(this.config.getIcon());
         return this;
     }
 
